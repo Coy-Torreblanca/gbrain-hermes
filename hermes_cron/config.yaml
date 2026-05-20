@@ -1,89 +1,79 @@
 jobs:
 - name: gbrain-contradictions
-  schedule: 0 9 * * *
-  prompt: 'Run gbrain eval suspected-contradictions. If any high-severity contradictions
-    are found, list them with a brief summary. Medium-severity: mention count only.
-    If clean, respond with "🧠 Brain is consistent — no contradictions found."
-
-    '
+  schedule: "0 9 * * *"
+  prompt: "Run gbrain eval suspected-contradictions. If any high-severity contradictions\n  are found, list them with a brief summary. Medium-severity: mention count only.\n  If clean, respond with \"\U0001F9E0 Brain is consistent — no contradictions found.\"\n\n  "
   skills:
   - second-brain
-  deliver: discord:#secondbrain
+  deliver: "discord:#secondbrain"
 - name: gbrain-doctor
-  schedule: 0 9 * * 1
-  prompt: 'Run gbrain doctor and report the health dashboard summary. Include: page
-    count, embed coverage, stale pages, orphan count, and health score.'
+  schedule: "0 9 * * 1"
+  prompt: "Run gbrain doctor and report the health dashboard summary. Include: page\n  count, embed coverage, stale pages, orphan count, and health score."
   skills:
   - second-brain
-  deliver: discord:#secondbrain
+  deliver: "discord:#secondbrain"
 - name: gbrain-dream
-  schedule: 0 2 * * *
-  prompt: "Run the gbrain dream cycle (autopilot maintenance).\n\n1. Submit autopilot-cycle\
-    \ job via gbrain Minions:\n   gbrain job autopilot-cycle\n   (This handles: embed\
-    \ stale chunks, populate backlinks, lint pages, purge soft-deleted pages past\
-    \ 72h window)\n\n2. Wait for the job to complete (poll progress until done).\n\
-    \n3. Report a one-line summary: pages processed, embeddings generated, backlinks\
-    \ populated, pages purged.\n\nIf the Minions worker is down, report that the dream\
-    \ cycle couldn't run and ask to start the worker.\n"
+  schedule: "0 2 * * *"
+  prompt: "Run the gbrain dream cycle (autopilot maintenance).\n\n1. Submit autopilot-cycle\n  job via gbrain Minions:\n   gbrain job autopilot-cycle\n   (This handles: embed\n  stale chunks, populate backlinks, lint pages, purge soft-deleted pages past\n  72h window)\n\n2. Wait for the job to complete (poll progress until done).\n\n3. Report a one-line summary: pages processed, embeddings generated, backlinks\n  populated, pages purged.\n\nIf the Minions worker is down, report that the dream\n  cycle couldn't run and ask to start the worker.\n"
   skills:
   - second-brain
-  deliver: discord:#secondbrain
+  deliver: "discord:#secondbrain"
 - name: gbrain-orphans
-  schedule: 0 9 * * 6
-  prompt: 'Surface orphan pages from gbrain for enrichment.
-
-
-    1. Run gbrain find-orphans to list pages with no inbound links.
-
-    2. If orphans > 50: report count + top 10 (sorted by most recent).
-
-    3. If orphans ≤ 50: list all orphans with their type and last-updated date.
-
-    4. If 0 orphans: respond with "🎮 Zero orphan pages — brain graph is fully connected."
-
-
-    Keep it brief. This is a cue for Coy to decide which orphans to enrich, not an
-    automated enrichment job.
-
-    '
+  schedule: "0 9 * * 6"
+  prompt: "Surface orphan pages from gbrain for enrichment.\n\n1. Run gbrain find-orphans to list pages with no inbound links.\n\n2. If orphans > 50: report count + top 10 (sorted by most recent).\n\n3. If orphans \u2264 50: list all orphans with their type and last-updated date.\n\n4. If 0 orphans: respond with \"\U0001F3AE Zero orphan pages — brain graph is fully connected.\"\n\nKeep it brief. This is a cue for Coy to decide which orphans to enrich, not an\n  automated enrichment job.\n  "
   skills:
   - second-brain
-  deliver: discord:#secondbrain
+  deliver: "discord:#secondbrain"
 - name: gbrain-article-enrichment
-  schedule: 0 9 * * 0
-  prompt: 'Auto-enrich orphan articles by linking entities.
-
-
-    1. Run gbrain find-orphans to list pages with no inbound links, filtered to article/research
-    types.
-
-    2. For each orphan article, run gbrain extract to find entity mentions (people,
-    companies, projects, concepts).
-
-    3. For each entity found, check if a gbrain page exists (using gbrain search or
-    resolve_slugs).
-
-    4. If the entity page exists, create a back-link: gbrain add-link from=<article>
-    to=<entity> link_type=references.
-
-    5. Report a summary: how many articles processed, how many links created.
-
-
-    Keep it brief. This runs weekly to maintain graph connectivity.
-
-    '
+  schedule: "0 9 * * 0"
+  prompt: "Auto-enrich orphan articles by linking entities.\n\n1. Run gbrain find-orphans to list pages with no inbound links, filtered to article/research\n  types.\n\n2. For each orphan article, run gbrain extract to find entity mentions (people,\n  companies, projects, concepts).\n\n3. For each entity found, check if a gbrain page exists (using gbrain search or\n  resolve_slugs).\n\n4. If the entity page exists, create a back-link: gbrain add-link from=<article>\n  to=<entity> link_type=references.\n\n5. Report a summary: how many articles processed, how many links created.\n\nKeep it brief. This runs weekly to maintain graph connectivity.\n  "
   skills:
   - second-brain
-  deliver: discord:#secondbrain
+  deliver: "discord:#secondbrain"
 - name: personalai-healthcheck
-  schedule: 0 6 * * *
-  prompt: "Run the Personal AI health check and report the results.\n\n1. Run /app/healthcheck.sh\n\
-    2. Report a concise summary:\n   - Overall status (PASS/WARN/FAIL)\n   - Any warnings\
-    \ and failures\n   - Key numbers: gbrain brain score, embed coverage, orphans,\
-    \ stale pages\n   - Supervisor program statuses\n3. If any failures are found,\
-    \ flag them for attention.\n4. If the health check shows degradation, recommend\
-    \ next steps.\n\nKeep it brief.\n"
+  schedule: "0 6 * * *"
+  prompt: "Run the Personal AI health check and report the results.\n\n1. Run /app/healthcheck.sh\n\n2. Report a concise summary:\n     - Overall status (PASS/WARN/FAIL)\n     - Any warnings and failures\n     - Key numbers: gbrain brain score, embed coverage, orphans, stale pages\n     - Supervisor program statuses\n\n3. If any failures are found, flag them for attention.\n\n4. If the health check shows degradation, recommend next steps.\n\nKeep it brief.\n  "
   skills:
   - second-brain
-  deliver: discord:#secondbrain
+  deliver: "discord:#secondbrain"
+- name: org-hook-habits-checks
+  schedule: "0 10,22 * * *"
+  prompt: |
+    ## Workflow
 
+    Sync org mode changes to gbrain by checking the gbrain update audit log for pending structural changes and reporting them.
+
+    ### Step 1: Check gbrain Update Audit Log
+
+    Read the recent gbrain update audit log:
+    ```bash
+    python3 ~/.hermes/scripts/org_change_hook.py --log --log-limit 30
+    ```
+
+    Look for entries where `merits_gbrain=True` and `gbrain_action_taken` is `false` or missing.
+
+    For each pending entry:
+    - Note the entity, reason, and classification
+    - Note the filepath and script that triggered it
+    - Do NOT take action yourself (gbrain writes require user context)
+
+    If no pending entries, report: "No pending gbrain updates."
+
+    ### Step 2: Report
+
+    Format a concise report:
+
+    ```
+    🔄 Org ↔ gbrain Sync — {date}
+
+    ## Pending gbrain Updates
+    {list each pending entry with: entity, reason, classification, filepath}
+    {If clean: "None"}
+
+    ## Hook Status
+    Active ✓
+    ```
+
+    Keep it brief. One-line per item. If there's nothing to report, just say "Clean — no pending gbrain updates."
+  skills:
+  - second-brain
+  deliver: origin

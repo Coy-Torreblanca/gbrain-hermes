@@ -76,6 +76,13 @@ else
   echo "✓ plugins copied"
 fi
 
+if [ ! -d /opt/hermes-agent/scripts ]; then
+  echo "WARNING: /opt/hermes-agent/scripts not found, skipping"
+else
+  cp -r /opt/hermes-agent/scripts/* /data/.hermes/scripts/
+  echo "✓ scripts copied"
+fi
+
 # Verify critical files were created
 echo ""
 echo "Verifying critical files..."
