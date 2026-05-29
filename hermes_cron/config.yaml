@@ -77,3 +77,103 @@ jobs:
   skills:
   - second-brain
   deliver: origin
+- name: daily-triage
+  schedule: "30 15 * * *"
+  prompt: |
+    Load the `coy-sprint-inbox-triage` skill and read every uncategorized item in inbox.org.
+
+    1. Get EPIC list: python3 ~/.hermes/scripts/org_query.py /data/syncthing/Sync/org/work/tasks.org --epics
+    2. Read inbox.org contents.
+    3. For each non-DONE inbox item:
+       - Auto-detect parent EPIC by keyword-scoring against EPIC titles
+       - Auto-estimate points from hours estimate
+       - If body < 50 chars, flag as thin context
+       - Check for ICEBOX sibling EPIC if non-urgent
+       - Run dry-run validation on the proposed insertion
+    4. Present a batch triage proposal: every item with its suggested destination EPIC, points, and flags.
+
+    Do NOT make any file changes. Do NOT create todos. This is a read-only proposal.
+    If inbox is empty, respond with [SILENT].
+  skills:
+  - coy-sprint-inbox-triage
+  - second-brain
+  deliver: "discord:1507067455737040970"
+  enabled_toolsets:
+  - terminal
+- name: sprint-status
+  schedule: "30 15 * * *"
+  prompt: |
+    Load the `sprint-retro` skill and generate a mid-sprint pulse check.
+
+    1. Determine current sprint: python3 ~/.hermes/scripts/org_query.py /data/syncthing/Sync/org/work/tasks.org --stats
+    2. Gather data: --retro N, --summary N, --find-active
+    3. Query gbrain for past retro pages to surface velocity trends and lessons learned.
+    4. Build the mid-sprint pulse report:
+       - Active work (currently STARTED items)
+       - Completion percentage vs total committed
+       - Risk assessment (overcommit, fragmentation, velocity, time pressure, blockers)
+       - Gap analysis by EPIC
+       - Lessons from previous sprints (from gbrain)
+    5. Deliver the verdict: ON TRACK / AT RISK / OFF TRACK with evidence.
+
+    Do NOT save to gbrain. This is a mid-sprint check, not a final retro.
+  skills:
+  - sprint-retro
+  - second-brain
+  deliver: "discord:1507066955931058287"
+- name: sprint-rollover
+  schedule: "30 15 * * *"
+  prompt: |
+    Load the `sprint-rollover` and `second-brain` skills.
+
+    First, check if today is the trigger day:
+    1. Run: python3 ~/.hermes/scripts/habit_query.py /data/syncthing/Sync/org/work/sprint_habits.org --list
+    2. Find the habit "Bi-Weekly Sprint Cleanup & Planning"
+    3. Check its status field
+
+    IF status is NOT "due-today":
+      Respond with only [SILENT] as the first line and stop here.
+      No report, no gbrain update, no delivery.
+
+    IF status IS "due-today":
+      1. Generate the full end-of-sprint rollover report:
+         - Determine current sprint from --stats
+         - Gather data: --retro N, --sprint N, --stats
+         - Query gbrain past retro pages for velocity history
+         - Build all sections: Sprint Summary, What Got Done, What's Rolling Over (by EPIC with reasons), Gap Analysis by EPIC, Velocity & Trends (with historical comparison), Next-Sprint Recommendation
+      2. Persist the findings to gbrain:
+         a. Create a meeting page at meetings/<today-date>-sprint-N-rollover with the full report
+         b. For each EPIC with rolling-over items, add a timeline entry to that EPIC slug
+         c. Add a timeline entry to concepts/sprint-planning-skill noting rollover data is available
+         d. Update wiki/sprint/status with final sprint metrics
+      3. Cite everything with [Source: sprint-rollover cron, YYYY-MM-DD]
+  skills:
+  - sprint-rollover
+  - second-brain
+  deliver: "discord:1507068065530253352"
+  enabled_toolsets:
+  - terminal
+- name: habit-status
+  schedule: "30 4 * * *"
+  prompt: |
+    Load the `habit-status` and `second-brain` skills.
+
+    1. Check both habit files:
+       - python3 ~/.hermes/scripts/habit_query.py --list && --overdue && --due-today
+       - python3 ~/.hermes/scripts/habit_query.py /data/syncthing/Sync/org/work/sprint_habits.org --list && --overdue && --due-today
+    2. Check streaks for all active habits.
+    3. Build the habit status report: overdue items, due-today items, current streaks.
+
+    After checking, persist to gbrain:
+    a. Create a daily snapshot at daily/habits-<today-date>: every habit's state, streak count, last-completion date.
+    b. For any habit missed 3+ consecutive days, add a timeline entry to concepts/habits-status-output-architecture flagging the pattern.
+    c. Cite everything with [Source: habit-status cron, YYYY-MM-DD].
+
+    If every habit is on track — nothing overdue, due-today items completed — respond with only [SILENT] as the first line.
+    If any habit needs attention, deliver the formatted status report.
+  skills:
+  - habit-status
+  - second-brain
+  enabled_toolsets:
+  - terminal
+  deliver: "discord:1507068125684695131"
