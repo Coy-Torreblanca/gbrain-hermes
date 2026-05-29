@@ -1,6 +1,6 @@
 jobs:
 - name: gbrain-contradictions
-  schedule: "0 9 * * *"
+  schedule: "0 9 * * 3"
   prompt: "Run gbrain eval suspected-contradictions. If any high-severity contradictions\n  are found, list them with a brief summary. Medium-severity: mention count only.\n  If clean, respond with \"\U0001F9E0 Brain is consistent — no contradictions found.\"\n\n  "
   skills:
   - second-brain
