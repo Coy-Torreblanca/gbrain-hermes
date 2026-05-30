@@ -40,40 +40,68 @@ jobs:
   prompt: |
     ## Workflow
 
-    Sync org mode changes to gbrain by checking the gbrain update audit log for pending structural changes and reporting them.
+    Sync org mode changes to gbrain by reading the audit log, creating/updating gbrain pages for structural changes, and clearing processed entries.
 
-    ### Step 1: Check gbrain Update Audit Log
+    ### Step 1: Read ALL Audit Log Entries
 
-    Read the recent gbrain update audit log:
+    Read the entire gbrain update audit log:
     ```bash
-    python3 ~/.hermes/scripts/org_change_hook.py --log --log-limit 30
+    python3 ~/.hermes/scripts/org_change_hook.py --log-all
     ```
 
-    Look for entries where `merits_gbrain=True` and `gbrain_action_taken` is `false` or missing.
+    Parse the JSONL output. For each entry, check:
 
-    For each pending entry:
-    - Note the entity, reason, and classification
-    - Note the filepath and script that triggered it
-    - Do NOT take action yourself (gbrain writes require user context)
+    ### Step 2: Filter to Actionable Entries
 
-    If no pending entries, report: "No pending gbrain updates."
+    Only process entries that meet ALL criteria:
+    - `merits_gbrain` is `true`
+    - `gbrain_action_taken` is `false` or missing
+    - `filepath` does NOT start with `/tmp/`
+    - Reason or classification is "structural" or relates to new EPIC/STORY creation
 
-    ### Step 2: Report
+    Skip everything else — test noise, routine state transitions, already-processed entries.
+
+    ### Step 3: Process Each Pending Entry
+
+    For each actionable entry, determine what gbrain action to take:
+
+    1. **Identify the entity** from `relevant_entities` or `reason` field
+    2. **Search gbrain** for an existing page: `mcp_gbrain_search(query="<entity_name>")`
+    3. **If the page already exists:** add a timeline entry noting the org change:
+       `mcp_gbrain_add_timeline_entry(slug="<existing_slug>", date="YYYY-MM-DD", summary="Updated from org hook: <reason>")`
+    4. **If the page doesn't exist:** create a new gbrain page:
+       - If entity keyword is EPIC: slug `projects/<slugified-name>`, type `project`
+       - If entity keyword is STORY/STORY-NEXT/STORY-STARTED: slug `concepts/<slugified-name>`, type `concept`
+       - Otherwise: slug `concepts/<slugified-name>`, type `concept`
+       - Include frontmatter (type, title, tags: [org-hook, created-from-org])
+       - Add a compiled truth summary noting the org source
+       - Add a timeline entry with the creation event
+       - Cite all facts: `[Source: org hook, <script>/<operation>, YYYY-MM-DD]`
+
+    ### Step 4: Delete the Processed Log
+
+    After ALL entries have been processed (or skipped if no actionable entries found):
+    ```bash
+    python3 ~/.hermes/scripts/org_change_hook.py --delete-log
+    ```
+    This clears the audit log so the next run starts fresh.
+
+    ### Step 5: Report
 
     Format a concise report:
 
     ```
     🔄 Org ↔ gbrain Sync — {date}
 
-    ## Pending gbrain Updates
-    {list each pending entry with: entity, reason, classification, filepath}
-    {If clean: "None"}
+    ## gbrain Pages Updated/Created
+    {list each page: slug, action (created/updated), entity name}
+    {If none: "None — no structural changes pending"}
 
-    ## Hook Status
-    Active ✓
+    ## Log Status
+    Log cleared ✓ ({count} entries processed, {count} deleted)
     ```
 
-    Keep it brief. One-line per item. If there's nothing to report, just say "Clean — no pending gbrain updates."
+    Keep it brief. One line per page. If there was nothing actionable and the log was simply cleaned up, say so.
   skills:
   - second-brain
   deliver: origin
